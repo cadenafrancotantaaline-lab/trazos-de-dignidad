@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trazos de Dignidad - ODS 1: Fin de la Pobreza</title>
+<style>
+:root{--pink:#ff5b91;--pink-dark:#e83e78;--pink-pale:#fff0f5;--ink:#54465b;--green:#7bc96f;--blue:#58b8ec;--orange:#ffad45;--purple:#ad8be8}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(#fff0f5,#fff8f3);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",sans-serif}
+header{padding:22px 16px 18px;text-align:center;color:#fff;background:linear-gradient(135deg,#ff679b,#ff85aa);border-bottom:5px solid #ff4f89;box-shadow:0 5px 18px #ff85aa55}
+header h1{margin:0;font-size:clamp(1.7rem,4vw,2.5rem);letter-spacing:1px;text-shadow:0 3px #d94479}
+header p{margin:8px 0 0}
+nav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+nav button,.btn-pincel,#btn-borrar{border:0;border-radius:999px;padding:11px 17px;font-weight:800;cursor:pointer;transition:transform .18s,box-shadow .18s}
+nav button{background:#fff;color:var(--pink-dark);box-shadow:0 4px 0 #f5bdd0}
+nav button:hover,.btn-pincel:hover,#btn-borrar:hover{transform:translateY(-2px)}
+nav button.btn-nav-activo{background:var(--pink-dark);color:#fff;box-shadow:0 4px 0 #b52c60}
+main{max-width:1120px;margin:22px auto;padding:clamp(14px,3vw,28px);background:#fff;border:3px solid #ffd8e4;border-radius:26px;box-shadow:0 10px 25px #eaa3bc26}
+.seccion-oculta{display:none!important}.seccion-activa{display:block!important}
+h2{color:#e9437c;margin-top:0}
+.herramientas{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin:18px 0}
+.btn-pincel{color:#fff;box-shadow:0 4px 0 #0002;font-size:.95rem}
+.btn-pincel.activo{outline:4px solid #ffd0df;box-shadow:0 0 0 6px #ff6b9b66}
+#btn-borrar{background:var(--purple);color:white;box-shadow:0 4px 0 #8c6fc5}
+.instrucciones-pincel{text-align:center;font-weight:bold;color:#c82e69;margin:10px 0 15px;background:#fff0f5;padding:12px;border-radius:15px}
+.contenedor-canvas{position:relative;border:4px dashed #ffabc7;background:#dff5ff;border-radius:22px;overflow:hidden;width:100%;box-shadow:0 5px 0 #ffe0ea}
+.lluvia-overlay{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
+.particula-caida{position:absolute;top:-60px;line-height:1;font-size:clamp(25px,4vw,42px);filter:drop-shadow(0 3px 2px #68465a30);animation:caerBonito var(--duracion,3.2s) cubic-bezier(.2,.65,.35,1) forwards}
+@keyframes caerBonito{0%{transform:translate3d(0,-20px,0) rotate(-18deg) scale(.7);opacity:0}12%{opacity:1}80%{opacity:1}100%{transform:translate3d(var(--deriva,20px),calc(var(--alto,520px) + 90px),0) rotate(var(--giro,300deg)) scale(1.08);opacity:0}}
+.mensaje-sorpresa{position:absolute;top:14px;left:50%;transform:translateX(-50%);max-width:90%;padding:10px 17px;border:2px solid #fff;border-radius:999px;background:#fff8fc;color:#d6336c;font-weight:900;font-size:clamp(12px,2.2vw,17px);text-align:center;box-shadow:0 5px 18px #7a436633;animation:apareceMensaje .35s ease-out both;white-space:normal}
+@keyframes apareceMensaje{from{opacity:0;translate:0 -12px}to{opacity:1;translate:0 0}}
+canvas{display:block;width:100%;height:auto;cursor:pointer;touch-action:manipulation}
+#indicador-impacto{margin:18px auto 0;max-width:460px;font-size:1.15rem;font-weight:bold;color:#e83e78;text-align:center;background:#fff0f5;padding:13px;border-radius:999px;border:2px solid #ffc5d8}
+.control-rango{margin:22px 0;display:flex;flex-direction:column;gap:10px}.control-rango input{width:100%;cursor:pointer;accent-color:var(--pink)}
+#resultado-simulador{font-weight:bold;font-size:1.08rem;padding:16px;background:#fff0f5;border:2px solid #ffb6ce;border-radius:16px;text-align:center;color:#c82e69}
+.tarjetas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:15px}
+.tarjeta{border:2px solid #ffd8e4;padding:14px;border-radius:20px;background:#fff9fb;overflow:hidden}
+.tarjeta h3{margin:0 0 8px;color:#e9437c}.tarjeta p{line-height:1.5}
+.mini-ilustracion{width:100%;height:130px;display:block;object-fit:cover;border-radius:14px;margin-bottom:12px;background:#dff5ff}
+.accion-lista{padding-left:1.2rem;line-height:2}
+@media(max-width:600px){nav button{flex:1 1 42%;padding:10px 8px}.btn-pincel{flex:1 1 42%}main{margin:12px;border-radius:20px}}
+</style>
+</head>
+<body>
+<header>
+<h1>✨ TRAZOS DE DIGNIDAD ✨</h1>
+<p>Transforma la comunidad: sana personas, construye hogares y llena de vida el entorno 💖</p>
+<nav>
+<button id="nav-lienzo" class="btn-nav-activo" onclick="cambiarSeccion('lienzo')">🎨 Lienzo Interactivo</button>
+<button id="nav-simulador" onclick="cambiarSeccion('simulador')">🎚️ Taller de Cobertura</button>
+<button id="nav-historias" onclick="cambiarSeccion('historias')">📖 Casos de Impacto</button>
+<button id="nav-accion" onclick="cambiarSeccion('accion')">🤝 Acción Comunitaria</button>
+</nav>
+</header>
+<main>
+<section id="lienzo" class="seccion-activa">
+<h2>🏡 Transforma la Comunidad</h2>
+<div class="instrucciones-pincel" id="modoAccionTexto">Herramienta activa: 🏠 Vivienda — Haz clic sobre las casitas grises para mejorarlas.</div>
+<div class="herramientas">
+<button class="btn-pincel activo" data-tipo="Vivienda" style="background:#b5179e">🏠 Vivienda</button>
+<button class="btn-pincel" data-tipo="Salud" style="background:#58b957">🩺 Salud</button>
+<button class="btn-pincel" data-tipo="Educación" style="background:#279bd6">📚 Educación</button>
+<button class="btn-pincel" data-tipo="Alimentación" style="background:#f39a20">🍎 Alimentación</button>
+<button id="btn-borrar">🧹 Reiniciar escenario</button>
+</div>
+<div class="contenedor-canvas" id="escenarioInteractivo"><canvas id="canvasDibujo" width="1000" height="520" aria-label="Ilustración interactiva de una comunidad"></canvas><div class="lluvia-overlay" id="lluviaOverlay" aria-hidden="true"></div></div>
+<div id="indicador-impacto">✨ Transformación social: <span id="porcentaje">0</span>% ✨</div>
+</section>
+<section id="simulador" class="seccion-oculta">
+<h2>🎚️ Taller de Cobertura de Servicios</h2><p>Mueve la barrita para simular la inversión en la comunidad 🌸:</p>
+<div class="control-rango"><label for="rangoInversion"><strong>Nivel de cobertura y apoyo social:</strong></label><input type="range" id="rangoInversion" min="0" max="100" value="20"></div>
+<div id="resultado-simulador">Estado: Cobertura insuficiente y alta vulnerabilidad (20%) 🥺</div>
+</section>
+<section id="historias" class="seccion-oculta"><h2>📖 Casos de Impacto</h2><div class="tarjetas-grid" id="contenedorTarjetas"></div></section>
+<section id="accion" class="seccion-oculta"><h2>🤝 Acción Comunitaria</h2>
+<ul class="accion-lista"><li>🎨 Arte comunitario para transformar espacios públicos.</li><li>🎒 Colectas de insumos escolares y botiquines básicos.</li><li>🏠 Jornadas de voluntariado para mejorar viviendas.</li></ul></section>
+</main>
+<script>
+function cambiarSeccion(idSeccion){
+ document.querySelectorAll('main > section').forEach(sec=>{sec.classList.remove('seccion-activa');sec.classList.add('seccion-oculta')});
+ document.querySelectorAll('nav button').forEach(btn=>btn.classList.remove('btn-nav-activo'));
+ const destino=document.getElementById(idSeccion);if(destino){destino.classList.remove('seccion-oculta');destino.classList.add('seccion-activa')}
+ const boton=document.getElementById('nav-'+idSeccion);if(boton)boton.classList.add('btn-nav-activo');
+}
+const canvas=document.getElementById('canvasDibujo'),ctx=canvas.getContext('2d');
+let tipoPincel='Vivienda';
+let estadoComunidad={casas:[0,0,0],personas:[0,0,0],escuela:0,alimentos:0};
+const progresoMax=8;
+function redondeado(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function nube(x,y,s=1){
+ ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,y,19*s,0,Math.PI*2);ctx.arc(x+22*s,y-12*s,25*s,0,Math.PI*2);ctx.arc(x+48*s,y,20*s,0,Math.PI*2);ctx.arc(x+25*s,y+5*s,23*s,0,Math.PI*2);ctx.fill();
+}
+function flor(x,y,color='#ff76a8',s=1){
+ for(let i=0;i<5;i++){let a=i*Math.PI*2/5;ctx.fillStyle=color;ctx.beginPath();ctx.arc(x+Math.cos(a)*8*s,y+Math.sin(a)*8*s,5*s,0,Math.PI*2);ctx.fill()}
+ ctx.fillStyle='#ffdc59';ctx.beginPath();ctx.arc(x,y,4*s,0,Math.PI*2);ctx.fill();
+}
+function sol(x,y){
+ ctx.strokeStyle='#ffc43d';ctx.lineWidth=5;for(let i=0;i<12;i++){let a=i*Math.PI/6;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*43,y+Math.sin(a)*43);ctx.lineTo(x+Math.cos(a)*55,y+Math.sin(a)*55);ctx.stroke()}
+ let g=ctx.createRadialGradient(x-12,y-12,3,x,y,43);g.addColorStop(0,'#fff59a');g.addColorStop(1,'#ffc83d');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,40,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#74452d';ctx.beginPath();ctx.arc(x-13,y-3,3,0,Math.PI*2);ctx.arc(x+13,y-3,3,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#74452d';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y+3,11,0,Math.PI);ctx.stroke();
+ ctx.fillStyle='#ff9c9c';ctx.beginPath();ctx.arc(x-23,y+9,7,0,Math.PI*2);ctx.arc(x+23,y+9,7,0,Math.PI*2);ctx.fill();
+}
+function arbol(x,y,feliz=true){
+ redondeado(x-8,y+18,16,58,6,'#9a5b36');
+ let colors=feliz?['#80d66e','#55bd66','#a4e66d']:['#b7c2c6','#9caeb4','#c6d0d3'];
+ [[0,0,31],[ -22,15,23],[22,15,24],[0,-22,23]].forEach((p,i)=>{ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.arc(x+p[0],y+p[1],p[2],0,Math.PI*2);ctx.fill()});
+ if(feliz){flor(x-12,y-7,'#ffdf62',.65);flor(x+15,y+10,'#ff8bb3',.55)}
+}
+function casa(x,y,mejorada){
+ // sombra
+ ctx.fillStyle='#6c7c8950';ctx.beginPath();ctx.ellipse(x+65,y+126,76,12,0,0,Math.PI*2);ctx.fill();
+ // paredes con suave degradado
+ let pared=ctx.createLinearGradient(x,y,x+125,y+90);pared.addColorStop(0,mejorada?'#fff0d9':'#d7dde0');pared.addColorStop(1,mejorada?'#ffb9d0':'#aebbc3');
+ ctx.fillStyle=pared;ctx.beginPath();ctx.roundRect(x+8,y+38,114,82,8);ctx.fill();
+ // techo
+ ctx.fillStyle=mejorada?'#f56f82':'#7c8997';ctx.beginPath();ctx.moveTo(x-5,y+43);ctx.lineTo(x+65,y-8);ctx.lineTo(x+135,y+43);ctx.quadraticCurveTo(x+65,y+32,x-5,y+43);ctx.fill();
+ ctx.strokeStyle=mejorada?'#c94b67':'#596774';ctx.lineWidth=3;ctx.lineJoin='round';ctx.stroke();
+ // tejas
+ ctx.strokeStyle=mejorada?'#ffb0a7':'#aeb9c2';ctx.lineWidth=2;
+ for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(x+27+i*23,y+21-i*1);ctx.lineTo(x+65+i*16,y+5+i*11);ctx.stroke()}
+ // ventanas
+ [[x+20,y+56],[x+87,y+56]].forEach(([wx,wy])=>{redondeado(wx,wy,23,25,5,'#fff');redondeado(wx+3,wy+3,17,19,3,'#71d5f3');ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(wx+11,wy+3);ctx.lineTo(wx+11,wy+22);ctx.moveTo(wx+3,wy+12);ctx.lineTo(wx+20,wy+12);ctx.stroke();if(mejorada){flor(wx+11,wy+31,'#ff6c9d',.45)}});
+ // puerta
+ redondeado(x+48,y+76,31,44,12,mejorada?'#b8784c':'#75818a');ctx.fillStyle=mejorada?'#eacb76':'#d5dce0';ctx.beginPath();ctx.arc(x+71,y+99,2.5,0,Math.PI*2);ctx.fill();
+ if(mejorada){ctx.fillStyle='#ff5d91';ctx.font='25px sans-serif';ctx.fillText('♥',x+51,y+30)}
+}
+function personita(x,y,feliz){
+ // piernas y zapatos
+ ctx.strokeStyle='#5b6473';ctx.lineWidth=7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x-7,y+37);ctx.lineTo(x-10,y+55);ctx.moveTo(x+7,y+37);ctx.lineTo(x+11,y+55);ctx.stroke();
+ redondeado(x-18,y+52,15,7,4,'#5b6473');redondeado(x+5,y+52,15,7,4,'#5b6473');
+ // brazos
+ ctx.strokeStyle=feliz?'#ffb887':'#c5a58c';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(x-12,y+8);ctx.lineTo(x-25,y+26);ctx.moveTo(x+12,y+8);ctx.lineTo(x+25,y+23);ctx.stroke();
+ // cuerpo
+ redondeado(x-16,y+2,32,39,11,feliz?['#ff6b9b','#53bce9','#a98be8'][Math.floor(x)%3]:'#aebbc3');
+ // orejas/cara
+ ctx.fillStyle='#f6c39e';ctx.beginPath();ctx.arc(x-17,y-11,6,0,Math.PI*2);ctx.arc(x+17,y-11,6,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#ffd3ae';ctx.beginPath();ctx.arc(x,y-12,20,0,Math.PI*2);ctx.fill();
+ // pelo
+ ctx.fillStyle=['#68432f','#70462f','#49362e'][Math.floor(x)%3];ctx.beginPath();ctx.arc(x,y-20,19,Math.PI,Math.PI*2);ctx.lineTo(x+18,y-11);ctx.quadraticCurveTo(x+8,y-20,x+3,y-13);ctx.quadraticCurveTo(x-6,y-25,x-18,y-10);ctx.closePath();ctx.fill();
+ // cara
+ ctx.fillStyle='#51372d';ctx.beginPath();ctx.arc(x-7,y-12,2.2,0,Math.PI*2);ctx.arc(x+7,y-12,2.2,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#a84e57';ctx.lineWidth=2.5;ctx.beginPath();if(feliz)ctx.arc(x,y-8,7,0,Math.PI);else ctx.arc(x,y-3,6,Math.PI,Math.PI*2);ctx.stroke();
+ ctx.fillStyle='#ff9caa';ctx.beginPath();ctx.arc(x-12,y-5,4,0,Math.PI*2);ctx.arc(x+12,y-5,4,0,Math.PI*2);ctx.fill();
+ if(feliz){ctx.font='20px sans-serif';ctx.fillText('♥',x+17,y-29)}
+}
+function escuela(x,y,mejorada){
+ // edificio
+ redondeado(x,y+25,180,92,12,mejorada?'#ffdb91':'#c2cbd0');
+ ctx.fillStyle=mejorada?'#f87583':'#7c8997';ctx.beginPath();ctx.moveTo(x-10,y+30);ctx.lineTo(x+90,y-18);ctx.lineTo(x+190,y+30);ctx.closePath();ctx.fill();
+ // front panel
+ redondeado(x+47,y+39,86,29,7,'#fff8e9');ctx.fillStyle='#428bc0';ctx.font='bold 17px sans-serif';ctx.textAlign='center';ctx.fillText('ESCUELA',x+90,y+59);ctx.textAlign='start';
+ redondeado(x+73,y+76,34,41,9,mejorada?'#62bfe8':'#7e8a93');
+ [[x+15,y+48],[x+140,y+48]].forEach(([wx,wy])=>{redondeado(wx,wy,25,26,4,'#fff');redondeado(wx+3,wy+3,19,20,3,mejorada?'#66c9f2':'#9daab2')});
+ ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+90,y+4,12,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#5597b9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x+90,y+4,9,0,Math.PI*2);ctx.moveTo(x+90,y+4);ctx.lineTo(x+90,y-2);ctx.moveTo(x+90,y+4);ctx.lineTo(x+96,y+7);ctx.stroke();
+}
+function huerto(x,y,mejorado){
+ redondeado(x,y+23,142,54,12,'#b87b4f');redondeado(x+7,y+28,128,42,9,mejorado?'#6dbe59':'#a6b0b5');
+ for(let i=0;i<5;i++){let px=x+18+i*26;ctx.strokeStyle='#387f43';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(px,y+58);ctx.quadraticCurveTo(px-5,y+38,px,y+31);ctx.stroke();
+ if(mejorado){ctx.fillStyle=['#ff5f65','#ffa83d','#d84f85'][i%3];ctx.beginPath();ctx.arc(px,y+31,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#4e9d4d';ctx.beginPath();ctx.ellipse(px+4,y+22,7,3,-.6,0,Math.PI*2);ctx.fill()}}
+}
+function dibujarEscenario(){
+ const w=canvas.width,h=canvas.height;
+ let cielo=ctx.createLinearGradient(0,0,0,350);cielo.addColorStop(0,'#75d4f7');cielo.addColorStop(1,'#e2f9ff');ctx.fillStyle=cielo;ctx.fillRect(0,0,w,h);
+ // montañas lejanas
+ ctx.fillStyle='#9bdca9';ctx.beginPath();ctx.moveTo(0,300);ctx.quadraticCurveTo(120,180,240,290);ctx.quadraticCurveTo(370,160,520,285);ctx.quadraticCurveTo(690,170,830,285);ctx.quadraticCurveTo(930,210,1000,275);ctx.lineTo(1000,520);ctx.lineTo(0,520);ctx.fill();
+ nube(100,80,1.1);nube(420,90,.9);nube(730,105,1);sol(900,75);
+ // pasto y camino
+ let grass=ctx.createLinearGradient(0,300,0,520);grass.addColorStop(0,'#a8e57b');grass.addColorStop(1,'#68c96c');ctx.fillStyle=grass;ctx.fillRect(0,300,w,220);
+ ctx.fillStyle='#f8dda0';ctx.beginPath();ctx.moveTo(410,520);ctx.quadraticCurveTo(460,420,390,350);ctx.quadraticCurveTo(360,315,420,290);ctx.lineTo(480,290);ctx.quadraticCurveTo(430,340,445,370);ctx.quadraticCurveTo(520,440,500,520);ctx.fill();
+ arbol(55,300,true);arbol(950,310,true);arbol(255,300,true);arbol(760,300,true);
+ // valla y flores
+ ctx.strokeStyle='#c28a51';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(0,355);ctx.lineTo(1000,355);ctx.stroke();for(let x=10;x<1000;x+=48){redondeado(x,339,9,33,4,'#d8a263')}
+ for(let i=0;i<36;i++)flor((i*83+27)%990,390+((i*29)%115),['#ff7eb6','#fff0a6','#b89af4','#fff'][i%4],.7);
+ // edificios arriba en su propia franja
+ escuela(400,170,!!estadoComunidad.escuela);
+ huerto(700,215,!!estadoComunidad.alimentos);
+ // casas clicables
+ const casasX=[90,300,570];casasX.forEach((x,i)=>casa(x,300,!!estadoComunidad.casas[i]));
+ const personasX=[190,490,820];personasX.forEach((x,i)=>personita(x,410,!!estadoComunidad.personas[i]));
+ const progreso=calcularProgreso();
+ if(progreso===100){ctx.fillStyle='#e83e78';ctx.font='bold 26px Trebuchet MS';ctx.textAlign='center';ctx.fillText('🎉 ¡Una comunidad llena de oportunidades! 🎉',500,32);ctx.textAlign='start'}
+}
+function calcularProgreso(){let hechos=estadoComunidad.casas.reduce((a,b)=>a+b,0)+estadoComunidad.personas.reduce((a,b)=>a+b,0)+estadoComunidad.escuela+estadoComunidad.alimentos;return Math.round(hechos/progresoMax*100)}
+function actualizarPorcentaje(){document.getElementById('porcentaje').textContent=calcularProgreso()}
+dibujarEscenario();
+canvas.addEventListener('click',e=>{
+ const rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)*canvas.width/rect.width,y=(e.clientY-rect.top)*canvas.height/rect.height;
+ if(tipoPincel==='Vivienda'){[[90,225],[300,435],[570,705]].forEach(([a,b],i)=>{if(x>=a&&x<=b&&y>=285&&y<=440)estadoComunidad.casas[i]=1})}
+ if(tipoPincel==='Salud'){[[165,215],[465,515],[795,845]].forEach(([a,b],i)=>{if(x>=a&&x<=b&&y>=390&&y<=480)estadoComunidad.personas[i]=1})}
+ if(tipoPincel==='Educación'&&x>=390&&x<=590&&y>=145&&y<=300)estadoComunidad.escuela=1;
+ if(tipoPincel==='Alimentación'&&x>=690&&x<=855&&y>=210&&y<=310)estadoComunidad.alimentos=1;
+ dibujarEscenario();actualizarPorcentaje();
+});
+document.querySelectorAll('.btn-pincel').forEach(btn=>btn.addEventListener('click',e=>{
+ document.querySelectorAll('.btn-pincel').forEach(b=>b.classList.remove('activo'));e.currentTarget.classList.add('activo');tipoPincel=e.currentTarget.dataset.tipo;
+ const textos={'Vivienda':'Herramienta activa: 🏠 Vivienda — Haz clic en cada casa para renovarla.','Salud':'Herramienta activa: 🩺 Salud — Haz clic en las personitas para que recuperen la sonrisa.','Educación':'Herramienta activa: 📚 Educación — Haz clic en la escuela para abrir sus puertas.','Alimentación':'Herramienta activa: 🍎 Alimentación — Haz clic en el huerto para cultivar alimentos.'};
+ document.getElementById('modoAccionTexto').textContent=textos[tipoPincel];
+}));
+document.getElementById('btn-borrar').addEventListener('click',()=>{estadoComunidad={casas:[0,0,0],personas:[0,0,0],escuela:0,alimentos:0};dibujarEscenario();actualizarPorcentaje()});
+const historiasData=[
+ {titulo:'✏️ Aulas comunitarias',desc:'Espacios de aprendizaje con libros y materiales para niñas y niños.',tipo:'escuela'},
+ {titulo:'🩺 Brigadas de salud',desc:'Atención y orientación de salud cercana y respetuosa para las familias.',tipo:'salud'},
+ {titulo:'🏠 Vivienda digna',desc:'Hogares seguros, cuidados y con mejores condiciones para vivir.',tipo:'casa'}
+];
+const contenedorTarjetas=document.getElementById('contenedorTarjetas');
+historiasData.forEach(item=>{
+ const card=document.createElement('article');card.className='tarjeta';
+ const mini=document.createElement('canvas');mini.className='mini-ilustracion';mini.width=400;mini.height=180;card.appendChild(mini);
+ const c=mini.getContext('2d');let g=c.createLinearGradient(0,0,0,180);g.addColorStop(0,'#a9e5ff');g.addColorStop(1,'#d9f6ca');c.fillStyle=g;c.fillRect(0,0,400,180);
+ c.fillStyle='#79cf70';c.fillRect(0,130,400,50);
+ if(item.tipo==='escuela'){c.fillStyle='#ffdb91';c.fillRect(105,62,190,90);c.fillStyle='#f87583';c.beginPath();c.moveTo(85,65);c.lineTo(200,15);c.lineTo(315,65);c.fill();c.fillStyle='#fff';c.fillRect(160,75,80,25);c.fillStyle='#428bc0';c.font='bold 16px sans-serif';c.textAlign='center';c.fillText('ESCUELA',200,93);c.fillStyle='#66c9f2';c.fillRect(125,80,25,28);c.fillRect(250,80,25,28);c.fillStyle='#7b4e37';c.fillRect(182,112,36,40)}
+ else if(item.tipo==='casa'){c.fillStyle='#ffc5d7';c.fillRect(115,72,170,82);c.fillStyle='#f56f82';c.beginPath();c.moveTo(90,76);c.lineTo(200,15);c.lineTo(310,76);c.fill();c.fillStyle='#65c8ef';c.fillRect(135,88,35,32);c.fillRect(230,88,35,32);c.fillStyle='#b8784c';c.fillRect(182,104,36,50);c.fillStyle='#e83e78';c.font='28px sans-serif';c.fillText('♥',187,62)}
+ else {c.fillStyle='#fff';c.beginPath();c.arc(200,62,34,0,Math.PI*2);c.fill();c.fillStyle='#f4c19c';c.beginPath();c.arc(200,66,28,0,Math.PI*2);c.fill();c.fillStyle='#65412e';c.beginPath();c.arc(200,52,28,Math.PI,Math.PI*2);c.fill();c.fillStyle='#4d372d';c.beginPath();c.arc(190,65,3,0,Math.PI*2);c.arc(210,65,3,0,Math.PI*2);c.fill();c.strokeStyle='#a84e57';c.lineWidth=3;c.beginPath();c.arc(200,70,9,0,Math.PI);c.stroke();c.fillStyle='#fff';c.fillRect(171,103,58,50);c.fillStyle='#ff5b91';c.fillRect(171,103,58,15);c.fillStyle='#e83e78';c.font='28px sans-serif';c.fillText('♥',240,55)}
+ const title=document.createElement('h3');title.textContent=item.titulo;const p=document.createElement('p');p.textContent=item.desc;card.append(title,p);contenedorTarjetas.appendChild(card);
+});
+document.getElementById('rangoInversion').addEventListener('input',e=>{const val=Number(e.target.value),res=document.getElementById('resultado-simulador');if(val<35)res.textContent=`Estado: Cobertura insuficiente y alta vulnerabilidad (${val}%) 🥺`;else if(val<75)res.textContent=`Estado: Servicios básicos en consolidación (${val}%) 🌱`;else res.textContent=`Estado: Comunidad con oportunidades y dignidad (${val}%) ✨💖`});
+
+// Sorpresas aleatorias: caen recursos que representan apoyo comunitario.
+const lluviaOverlay=document.getElementById('lluviaOverlay');
+const sorpresas=[
+ {nombre:'Apoyo económico',iconos:['💸','🪙','💵','💖'],mensaje:'¡Llegó apoyo económico para la comunidad! 💸'},
+ {nombre:'Libros',iconos:['📚','📖','✏️','📒'],mensaje:'¡Una lluvia de libros para aprender y crecer! 📚'},
+ {nombre:'Alimentos',iconos:['🍎','🥕','🍞','🥦','🍊'],mensaje:'¡Llegaron alimentos frescos para compartir! 🍎'}
+];
+function lanzarSorpresa(){
+ // Solo aparece cuando la persona está en el lienzo interactivo.
+ if(!document.getElementById('lienzo').classList.contains('seccion-activa')){programarSorpresa(3500);return}
+ const sorpresa=sorpresas[Math.floor(Math.random()*sorpresas.length)];
+ const mensaje=document.createElement('div');mensaje.className='mensaje-sorpresa';mensaje.textContent=sorpresa.mensaje;lluviaOverlay.appendChild(mensaje);
+ const cantidad=20;
+ for(let i=0;i<cantidad;i++){
+  const particula=document.createElement('span');particula.className='particula-caida';
+  particula.textContent=sorpresa.iconos[Math.floor(Math.random()*sorpresa.iconos.length)];
+  particula.style.left=(Math.random()*94+2)+'%';
+  particula.style.setProperty('--duracion',(2.4+Math.random()*2.2)+'s');
+  particula.style.setProperty('--alto',(canvas.clientHeight||520)+'px');
+  particula.style.setProperty('--deriva',((Math.random()-.5)*150)+'px');
+  particula.style.setProperty('--giro',((Math.random()-.5)*800)+'deg');
+  particula.style.animationDelay=(Math.random()*.9)+'s';
+  lluviaOverlay.appendChild(particula);
+  setTimeout(()=>particula.remove(),6000);
+ }
+ setTimeout(()=>mensaje.remove(),3500);
+ programarSorpresa(14000+Math.random()*16000);
+}
+function programarSorpresa(ms){setTimeout(lanzarSorpresa,ms)}
+// La primera sorpresa aparece después de unos segundos; las siguientes son impredecibles.
+programarSorpresa(7000+Math.random()*5000);
+</script>
+</body>
+</html>
